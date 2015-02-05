@@ -18,6 +18,7 @@
 package org.apache.spark.examples.pythonconverters
 
 import java.util.{Collection => JCollection, Map => JMap, HashMap => JHashMap}
+import java.io.File
 import scala.collection.JavaConversions._
 import org.apache.avro.generic.{GenericFixed, IndexedRecord}
 import org.apache.avro.mapred.AvroWrapper
@@ -26,6 +27,8 @@ import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 import org.apache.avro.Schema.Type
 import org.apache.avro.Schema.Field
+import org.apache.avro.SchemaBuilder
+import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.generic.GenericData
 import org.apache.spark.api.python.Converter
 import org.apache.spark.SparkException
@@ -131,6 +134,15 @@ class AvroWrapperToJavaConverter extends Converter[Any, Any] {
   }
 }
 
+object JavaToAvroWrapperConverter {
+//  val schema = SchemaBuilder.record("User").namespace("example.avro")
+//    .fields()
+//    .name("name").`type`().stringType().noDefault()
+//    .name("favorite_color").`type`().nullable().stringType().noDefault()
+//    .endRecord();
+  val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));
+}
+
 class JavaToAvroWrapperConverter extends Converter[Any, Any] {
   override def convert(obj: Any): Any = {
     if (obj == null) {
@@ -138,18 +150,17 @@ class JavaToAvroWrapperConverter extends Converter[Any, Any] {
     }
 
     // Auto-generate schema from data
-    val fields = obj.asInstanceOf[JMap[_, _]].map {
-      case (k,v) => new Field(k.toString, Schema.create(Type.STRING), null, null)
-    }
-    val schema = Schema.createRecord("User", null, "example.avro", false);
-    schema.setFields(fields.toSeq);
-    
-    // Create Avro record and wrap it
-    val record = new GenericData.Record(schema);
+//    val fields = obj.asInstanceOf[JMap[_, _]].map {
+//      case (k,v) => new Field(k.toString, Schema.create(Type.STRING), null, null)
+//    }
+//    val schema = Schema.createRecord("User", null, "example.avro", false);
+//    schema.setFields(fields.toSeq);
+        
+    val recordBuilder = new GenericRecordBuilder(JavaToAvroWrapperConverter.schema)
     obj.asInstanceOf[JMap[_, _]].map { 
-      case (key, value) => record.put(key.toString, value)
+      case (key, value) => recordBuilder.set(key.toString, value)
     }
-    new AvroKey(record)
+    new AvroKey(recordBuilder.build)
   }
 }
 
