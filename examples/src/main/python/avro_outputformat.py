@@ -22,11 +22,12 @@ from pyspark import SparkContext
 if __name__ == "__main__":
     if len(sys.argv) != 4 and len(sys.argv) != 5:
         print >> sys.stderr, """
-        Usage: avro_outputformat <hdfs_path> <name> <favorite_color> [writer_schema_file]
+        Usage: avro_outputformat <hdfs_path> <name> <favorite_color> <writer_schema_hdfs_file>
 
         Run with example jar:
-        ./bin/spark-submit --driver-class-path /path/to/example/jar /path/to/examples/avro_outputformat.py <hdfs_path> <name> <favorite_color> [writer_schema_file]
-        Assumes you have Avro data {u'favorite_color': u'red', u'name': u'Ben'}. Writer schema can be optionally specified in [writer_schema_file].
+        ./bin/spark-submit --driver-class-path /path/to/example/jar /path/to/examples/avro_outputformat.py <hdfs_path> <name> <favorite_color> <writer_schema_hdfs_file>
+        Writer schema is mandatory and needs to match schema used by Converter (there is no way to pass schema from PySpark to Converter due to API limitations).
+        Given example is for the user.asvc schema from Spark examples jar
         """
         exit(-1)
 
@@ -39,12 +40,12 @@ if __name__ == "__main__":
         conf = {"avro.schema.output.key" : reduce(lambda x, y: x+y, schema_rdd)}
     
     record = {"name" : sys.argv[2], "favorite_color" : sys.argv[3]}
-    sc.parallelize([(record, None)]).saveAsNewAPIHadoopFile(
+    sc.parallelize([record]).map(lambda x: (x, None)).saveAsNewAPIHadoopFile(
     	path,
         "org.apache.avro.mapreduce.AvroKeyOutputFormat",
         "org.apache.avro.mapred.AvroKey",
         "org.apache.hadoop.io.NullWritable",
-        keyConverter="org.apache.spark.examples.pythonconverters.JavaToAvroKeyConverter",
+        keyConverter="org.apache.spark.examples.pythonconverters.UserToAvroKeyConverter",
         conf=conf)
 
     sc.stop()

@@ -134,28 +134,35 @@ class AvroWrapperToJavaConverter extends Converter[Any, Any] {
   }
 }
 
-class JavaToAvroKeyConverter extends Converter[Any, Any] {
-  val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));
-  override def convert(obj: Any): Any = {
+/*
+ * Requires [[org.apache.avro.generic.GenericRecordBuilder]] that initialized with specific Avro schema.
+ * With current Spark API it's not possible to pass schema directly to Converter, so we need a concrete
+ * Converter implementation for given schema. 
+ */
+abstract class JavaToAvroKeyConverter extends Converter[Any, Any] {
+  
+  final override def convert(obj: Any): Any = {
     if (obj == null) {
       return null
     }
-    val recordBuilder = new GenericRecordBuilder(schema)
+    val recordBuilder = getRecordBuilder()
     obj.asInstanceOf[JMap[_, _]].map { 
       case (key, value) => recordBuilder.set(key.toString, value)
     }
     new AvroKey(recordBuilder.build)
   }
+  
+  def getRecordBuilder(): GenericRecordBuilder //Override in subclass
 }
 
-//object HelloWorld {
-//  def main(args: Array[String]) {
-//    val record = new JHashMap[String,String]()
-//    record.put("name", "Mike")
-//    record.put("favorite_color", "red")
-//    val converter = new JavaToAvroKeyConverter()
-//    val wrapper = converter.convert(record)
-//    println(wrapper)
-//    println(wrapper.asInstanceOf[AvroKey[GenericData.Record]].datum().getSchema())
-//  }
-//}
+object UserToAvroKeyConverter {
+  //Schema stays in companion object to avoid task serialization problems
+  val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));  
+}
+
+class UserToAvroKeyConverter extends JavaToAvroKeyConverter {
+  override def getRecordBuilder(): GenericRecordBuilder = {
+    new GenericRecordBuilder(UserToAvroKeyConverter.schema)
+  }
+}
+
