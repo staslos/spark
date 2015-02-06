@@ -44,7 +44,7 @@ if __name__ == "__main__":
         "org.apache.avro.mapreduce.AvroKeyOutputFormat",
         "org.apache.avro.mapred.AvroKey",
         "org.apache.hadoop.io.NullWritable",
-        keyConverter="org.apache.spark.examples.pythonconverters.JavaToAvroWrapperConverter",
+        keyConverter="org.apache.spark.examples.pythonconverters.JavaToAvroKeyConverter",
         conf=conf)
 
     sc.stop()

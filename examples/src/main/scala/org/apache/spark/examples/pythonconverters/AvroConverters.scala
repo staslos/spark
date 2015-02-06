@@ -134,7 +134,7 @@ class AvroWrapperToJavaConverter extends Converter[Any, Any] {
   }
 }
 
-class JavaToAvroWrapperConverter extends Converter[Any, Any] {
+class JavaToAvroKeyConverter extends Converter[Any, Any] {
   val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));
   override def convert(obj: Any): Any = {
     if (obj == null) {
@@ -153,7 +153,7 @@ class JavaToAvroWrapperConverter extends Converter[Any, Any] {
 //    val record = new JHashMap[String,String]()
 //    record.put("name", "Mike")
 //    record.put("favorite_color", "red")
-//    val converter = new JavaToAvroWrapperConverter()
+//    val converter = new JavaToAvroKeyConverter()
 //    val wrapper = converter.convert(record)
 //    println(wrapper)
 //    println(wrapper.asInstanceOf[AvroKey[GenericData.Record]].datum().getSchema())
