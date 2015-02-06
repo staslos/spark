@@ -134,29 +134,13 @@ class AvroWrapperToJavaConverter extends Converter[Any, Any] {
   }
 }
 
-object JavaToAvroWrapperConverter {
-//  val schema = SchemaBuilder.record("User").namespace("example.avro")
-//    .fields()
-//    .name("name").`type`().stringType().noDefault()
-//    .name("favorite_color").`type`().nullable().stringType().noDefault()
-//    .endRecord();
-  val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));
-}
-
 class JavaToAvroWrapperConverter extends Converter[Any, Any] {
+  val schema = new Schema.Parser().parse(getClass.getResourceAsStream("/user.avsc"));
   override def convert(obj: Any): Any = {
     if (obj == null) {
       return null
     }
-
-    // Auto-generate schema from data
-//    val fields = obj.asInstanceOf[JMap[_, _]].map {
-//      case (k,v) => new Field(k.toString, Schema.create(Type.STRING), null, null)
-//    }
-//    val schema = Schema.createRecord("User", null, "example.avro", false);
-//    schema.setFields(fields.toSeq);
-        
-    val recordBuilder = new GenericRecordBuilder(JavaToAvroWrapperConverter.schema)
+    val recordBuilder = new GenericRecordBuilder(schema)
     obj.asInstanceOf[JMap[_, _]].map { 
       case (key, value) => recordBuilder.set(key.toString, value)
     }
